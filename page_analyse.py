@@ -434,7 +434,3 @@ def page_analyse():
                         st.write(kac_g, kbeta_g, cc_g, r_squared_g)
                         st.pyplot(fig)
                         st.write('Goodness of fit, $r^2 :$','%.5f' % r_squared_g)
-                    
-                
-                    
-page_analyse()
