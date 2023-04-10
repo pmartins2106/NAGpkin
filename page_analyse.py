@@ -20,10 +20,23 @@ def page_analyse():
     The analyse page is made with Streamlit for fitting nucleation-and-growth
     parameters to data uploaded by the User.
     """
+    # function to make expander-selection
+    def make_expanders(expander_name, sidebar=True):
+        """ Set up Figure Mode expander. """
+        if sidebar:         
+            try:
+                return st.sidebar.expander(expander_name)
+            except:
+                return st.sidebar.beta_expander(expander_name)
+    
     # Choose mass-based or size-based analysis
-    # st.sidebar.markdown("**What type of progress curves do you have?**")
-    analysis_mode = st.sidebar.radio('**What type of progress curves do you have?**', ('Mass-based', 'Size-based'))   
-    st.sidebar.markdown("#")
+    # Figure display properties expander
+    with make_expanders("**Type of progress curves:**"):
+        st.markdown("**type of progress curves:**")
+        analysis_mode = st.radio("Options", ('Mass-based', 'Size-based'))
+    
+    # analysis_mode = st.sidebar.radio('**What type of progress curves do you have?**', ('Mass-based', 'Size-based'))   
+    # st.sidebar.markdown("#")
   
     st.markdown("<h2 style='text-align: center;'> Analyse phase separation kinetics </h2>", 
                 unsafe_allow_html=True)
@@ -36,17 +49,9 @@ def page_analyse():
     st.markdown("#")
     
     
-    def make_expanders(expander_name, sidebar=True):
-        """ Set up Figure Mode expander. """
-        if sidebar:         
-            try:
-                return st.sidebar.expander(expander_name)
-            except:
-                return st.sidebar.beta_expander(expander_name)
-    
     # Figure display properties expander
     with make_expanders("Select Figure Mode:"):
-        st.markdown("**Select Figure Mode:**")
+        st.markdown("Select Figure Mode:")
         plot_mode = st.radio("Options", ('Dark Mode', 'Light Mode'))
     
     def load_odf():
@@ -639,4 +644,4 @@ def page_analyse():
                                 
                     
                         
-#page_analyse()
+# page_analyse()
