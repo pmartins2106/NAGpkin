@@ -607,20 +607,23 @@ def page_analyse():
                                                      For information about the relative importance of the autocatalytic processes of growth and secondary nucleation consider\
                                                          [measuring size-based](https://doi.org/10.1002/ange.201707345) progress curves.')
                                                          
+                                        
                                         if r_squared_g < 0.95:
                                             if r_squared > 0.95:
-                                                st.write('- **Off-pathway aggregation** (OPA): The global fitting result is not great ($r^2 < $0.95). A possible cause is the occurrence of OPA.',\
-                                                         'Since the t50 scaling with [P] [is less sensitive to OPA](https://doi.org/10.1074/jbc.M115.699348) and provided better fitting results ($r^2 > $0.95) the occurrence of OPA is very likely.')
+                                                st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): The global fitting result is not great ($r^2 < $0.95). A possible cause is the occurrence of paralell patways of protein self-assembly.',\
+                                                         'Since the t50 scaling with [P] provided better fitting results ($r^2 > $0.95) the occurrence of colaescence or OPA is very likely.\
+                                                             Note: t50 vs. [P] scaling laws are [less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348).')
                                             else:
-                                                st.write('- **Off-pathway aggregation** (OPA): The global fitting result is not great ($r^2 < $0.95). A possible cause is the occurrence of OPA.',\
-                                                         'The t50 scaling with [P] [is less sensitive to OPA](https://doi.org/10.1074/jbc.M115.699348). In the present case, however, no additional insight was provided by the t50 scalinf with [P].')
+                                                st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): The global fitting result is not great ($r^2 < $0.95). A possible cause is the occurrence of paralell patways of protein self-assembly.',\
+                                                         'The t50 scaling with [P] [is less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348). In the present case, however, no additional insight was provided by the t50 scaling with [P].')
                                         else:
                                             if r_squared - r_squared_g < 0.02:
-                                                st.write('- **Off-pathway aggregation** (OPA): Since the global fitting result is good ($r^2 > $0.95), the occurrence of very extensive OPA is not likely.',\
-                                                     'Note: t50 scaling with [P] [is less sensitive to OPA](https://doi.org/10.1074/jbc.M115.699348) than the global fitting analysis.')
+                                                st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): Since the global fitting result is good ($r^2 > $0.95), the occurrence of very extensive coalescence and/or OPA is not likely.',\
+                                                     'Note: t50 scaling with [P] [is less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348) than the global fitting analysis.')
                                             else:
-                                                st.write('- **Off-pathway aggregation** (OPA): Since the global fitting result is good ($r^2 > $0.95), the occurrence of very extensive OPA is not likely.',\
-                                                         'Since the t50 scaling with [P] is better than the global fit, the occurrenc of some OPA is likely. Note: the t50 scaling with [P] [is less sensitive to OPA](https://doi.org/10.1074/jbc.M115.699348).')
+                                                st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): Since the global fitting result is good ($r^2 > $0.95), the occurrence of very extensive coalescence and/or OPA is not likely.',\
+                                                         'Since the t50 scaling with [P] is better than the global fit, the occurrenc of some coalescence and/or OPA is likely. Note: the t50 scaling with [P] [is less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348).')
+                                        
                                         if cc == ci:
                                             st.write('- **Surface Tension Effects** (STEs): Since $c_{'+(u'\u221e')+'} = c_c$, no STEs are present.')
                                         else:
@@ -638,10 +641,5 @@ def page_analyse():
                                                  
                                     else:
                                         st.write('Not available. The global fit results need to be improved.')
-                            
-   
-                        
-                                
-                    
                         
 # page_analyse()

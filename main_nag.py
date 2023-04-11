@@ -13,7 +13,7 @@ import streamlit as st
 from page_introduction import page_introduction
 from page_analyse import page_analyse
 # from page_validate import page_validate
-# from page_predict import page_predict
+from page_predict import page_predict
 
 
 # Set the default elements on the sidebar
@@ -22,17 +22,7 @@ st.set_page_config(page_title='NAGpkin')
 st.sidebar.markdown("<h2 style='text-align: center;'>NAGpkin</h2>", 
             unsafe_allow_html=True)
 st.sidebar.success('**N**ucleation-**An**d-**G**rowth **KIN**etics\
-                   of **P**rotein phase separation')
-
-# logo, name = st.sidebar.columns(2)
-# with logo:
-#     image = 'https://raw.githubusercontent.com/rdzudzar/DistributionAnalyser/main/images/logo_da.png?token=AIAWV2ZRCFKYM42DVFTD3OLAN3CQK'
-#     st.image(image, use_column_width=True)
-# with name:
-#     st.markdown("<h1 style='text-align: left;'> \
-#                 NAGpkin</h1>", unsafe_allow_html=True)
-# st.sidebar.write(" ")
-
+                   during **P**rotein phase separation')
 
 def main_nag():
     """
@@ -45,12 +35,11 @@ def main_nag():
        page_predict - contains various functions that allows user to predict
        particle size distributions from fitted parameters.   
     """
-
     pages = {
-        "GUIDELINES": page_introduction,
+        "INTRODUCTION": page_introduction,
         "ANALYSE phase separation kinetics": page_analyse,
         # "VALIDATE the kinetic mechanism": page_validate,
-        # "PREDICT particle size distributions": page_predict,
+        "PREDICT particle size distributions": page_predict,
     }
 
     st.sidebar.title("Main options")
