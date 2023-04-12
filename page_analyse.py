@@ -636,7 +636,7 @@ def page_analyse():
                                         if r_squared_g < 0.95:
                                             st.write('**Warning**: The global fitting is not great ($r^2 < $0.95). For better results, try to [improve data reproducibility](https://doi.org/10.3389/fnmol.2020.582488)')
                                                      
-                                        st.write('Note: The occurence of [Off-Pathway Aggregation](https://doi.org/10.3390/biom8040108) and [Surface Tension Effects](https://doi.org/10.1101/2022.11.23.517626) can be checked by complementary analytical methods.')        
+                                        st.write('Note: The occurence of [Off-Pathway Aggregation](https://doi.org/10.3390/biom8040108), [Surface Tension Effects](https://doi.org/10.1101/2022.11.23.517626) and coalescence can be checked using complementary analytical methods.')        
                                             
                                                  
                                     else:
