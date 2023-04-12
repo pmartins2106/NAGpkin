@@ -640,6 +640,6 @@ def page_analyse():
                                             
                                                  
                                     else:
-                                        st.write('Not available. The global fit results need to be improved.')
+                                        st.write('Not available. Check if the quality of the experimental results can be improved and if the model assumptions (found [here](https://doi.org/10.1074/jbc.M112.375345) and [here](https://doi.org/10.1002/anie.201707345)) apply to your system')
                         
 # page_analyse()

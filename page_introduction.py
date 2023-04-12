@@ -56,7 +56,7 @@ def page_introduction():
         st.write('''
             - A report summarizing the main conclusions of the analysis is provided in section **ANALYSE** together with the links to bibliographic references.
             - [Here](https://doi.org/10.1074/jbc.M112.375345) you can find the Crystallization-Like Model (CLM) describing mass-based progress curves with only two kinetic parameters. These parameters characterize primary nucleation and the combined influence of the autocatalytic processes of secondary nucleation and growth.
-        	- [Here](https://doi.org/10.1074/jbc.M115.699348) you can know how to identify off-pathway aggregation from mass-based progress curves.
+        	- [Here](https://doi.org/10.1074/jbc.M115.699348) you can learn how to identify off-pathway aggregation from mass-based progress curves.
         	- [Here](https://doi.org/10.1002/anie.201707345) you can find the CLM extended to consider size-based progress curves.
         	- [Here](https://doi.org/10.1101/2022.11.23.517626 ) you can find the CLM extended to liquid-liquid phase separation processes, and how to predict particle size distribution from the fitted kinetic parameters.
         	- More application examples of the CLM can be found [here](https://doi.org/10.1021/acs.jpcb.7b01120) (on the effect of molecular crowding), [here]( https://doi.org/10.1002/asia.201801703) (on applications in drug discovery), and [here]( https://doi.org/10.3390/biom8040108) (on the use of kinetic scaling laws).
