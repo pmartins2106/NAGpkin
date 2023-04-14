@@ -55,26 +55,34 @@ def page_analyse():
         plot_mode = st.radio("Options", ('Dark Mode', 'Light Mode'))
     
     def load_odf():
-        """ Get the loaded .csv into Pandas dataframe. """
-        df_load = pd.read_excel(input, skiprows=5,  engine="odf", header = None) #, header = None
-        # allow duplicate column names (https://stackoverflow.com/questions/50083583/allow-duplicate-columns-in-pandas)
-        df_load.columns = df_load.iloc[0]  # replace column with first row
-        df_load = df_load.drop(0)  # remove the first row
-        
-        # Remove empty columns
-        df_load.dropna(how='all', axis=1, inplace=True)
-        # number of curves
-        Ncurves = df_load.shape[1]-1
-        # Curve1, Curve2...
-        colist = ['Curve'+str(i) for i in range(1, Ncurves+1)]
-        P = df_load.columns[1:].values
-        # reshape to disply
-        Pdisp = P.reshape(1, -1)
-        dfP = pd.DataFrame(Pdisp, columns=colist, index=['[P]'])
-        st.info('Uploaded Data')
-        st.write(dfP)
-        df_load.columns =  np.concatenate((['Time'], colist), axis=0)
-        st.dataframe(df_load)
+        """ Get the loaded .odf into Pandas dataframe. """
+        try:
+            df_load = pd.read_excel(input, skiprows=5,  engine="odf", header = None) #, header = None
+            # allow duplicate column names (https://stackoverflow.com/questions/50083583/allow-duplicate-columns-in-pandas)
+            df_load.columns = df_load.iloc[0]  # replace column with first row
+            df_load = df_load.drop(0)  # remove the first row
+            
+            # Remove empty columns
+            df_load.dropna(how='all', axis=1, inplace=True)
+            # number of curves
+            Ncurves = df_load.shape[1]-1
+            # Curve1, Curve2...
+            colist = ['Curve'+str(i) for i in range(1, Ncurves+1)]
+            P = df_load.columns[1:].values
+            # reshape to disply
+            Pdisp = P.reshape(1, -1)
+            dfP = pd.DataFrame(Pdisp, columns=colist, index=['[P]'])
+            st.info('Uploaded Data')
+            st.write(dfP)
+            df_load.columns =  np.concatenate((['Time'], colist), axis=0)
+            st.dataframe(df_load)
+        except:
+            st.write('Error - check if the uploaded file is in the right format')
+            df_load = 0
+            Ncurves  = 0
+            P = ''
+            colist = 0
+            
 
         return df_load, Ncurves, P, colist
     
