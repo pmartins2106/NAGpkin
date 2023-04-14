@@ -30,7 +30,7 @@ def page_introduction():
     
     with st.expander("What do I *need*?"):
         st.write('''
-            You just need to upload into section **ANALYSE** the raw data describing the formation of a new protein phase. You can choose between mass-based or size-based progress curves.
+            You just need to upload the raw data describing the formation of a new protein phase into section **ANALYSE**. You can choose between mass-based or size-based progress curves.
         ''')
     with st.expander("What are *mass-based progress curves*?"):
         st.write('''
