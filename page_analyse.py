@@ -316,8 +316,8 @@ def page_analyse():
         if cc_mode == 'Unknown':
             # initial guesses of ka kb cc
             ig = np.array([.1, .1, cc0])
-            bds =  ([0, 0, cc0], [np.inf, np.inf, np.min(xdata)])
             try:
+                bds =  ([0, 0, cc0], [np.inf, np.inf, np.nanmin(xdata)])
                 parameters, covariance = curve_fit(second_fit, xdata, ydata, p0=ig, bounds = bds, maxfev=10000)
             except RuntimeError:
                # error message and proceed using ig for parameters
@@ -482,82 +482,56 @@ def page_analyse():
       
         data_fit_chk = st.checkbox("Estimate kinetic measurables")
         if data_fit_chk:
-            with st.spinner("Fitting... Please wait a moment."):
-                results, R1lst, fig, flag = fit_data(df)
-                if flag == 0:
-                    st.pyplot(fig)
-                    # Save to memory and offer to download.
-                    fn = 'Half-Life.png'
-                    buf = io.BytesIO()
-                    plt.savefig(buf, format='png', dpi=600)
-                    btn = st.download_button(
-                        label="Download image",
-                        data=buf,
-                        file_name=fn,
-                        mime="image/png"
-                        )
-                    buf.close()
+            if type(P) == int or type(P) == float:
+                with st.spinner("Fitting... Please wait a moment."):
+                    results, R1lst, fig, flag = fit_data(df)
+                    if flag == 0:
+                        st.pyplot(fig)
+                        # Save to memory and offer to download.
+                        fn = 'Half-Life.png'
+                        buf = io.BytesIO()
+                        plt.savefig(buf, format='png', dpi=600)
+                        btn = st.download_button(
+                            label="Download image",
+                            data=buf,
+                            file_name=fn,
+                            mime="image/png"
+                            )
+                        buf.close()
+            
+                        st.info('Half-life coordinates and curve limits')
+                        results.columns = colist
+                        st.dataframe(results)
+                        csvdf1 = pd.DataFrame(results).to_csv().encode('utf-8')
+                        st.download_button(
+                           "Download Data",
+                           csvdf1,
+                           "Measurables.csv",
+                           "text/csv",
+                           key='download-csv')                    
         
-                    st.info('Half-life coordinates and curve limits')
-                    results.columns = colist
-                    st.dataframe(results)
-                    csvdf1 = pd.DataFrame(results).to_csv().encode('utf-8')
-                    st.download_button(
-                       "Download Data",
-                       csvdf1,
-                       "Measurables.csv",
-                       "text/csv",
-                       key='download-csv')                    
-    
-                    
-                    data_comp_chk = st.checkbox("t50 scaling with [P]")
-                    if data_comp_chk:
-                        # Different [P] values
-                        Nunique = (len(set(P)))
-                        st.write("Adjust thermodynamic parameters (if needed):")
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            ci = st.number_input("Solubility, $c_{"+(u"\u221e")+"}$", format="%2.2f", value = 0.,min_value = 0.)
-                           
-                        with col2:
-                            cc_mode = st.radio("Critical solubility, $c_c$", ('Unknown', 'Known'))
-                            if cc_mode == 'Unknown':
-                                cc0 = 1 # initial guess
-                            else:
-                                cc0 = st.number_input("Enter value", format="%2.2f", value = ci, min_value = ci, max_value = min(results.iloc[0])*.9999)
                         
-                        kac, kbeta, cc, r_squared, fig  = fit_data2(results)
-                        if Nunique > 3:    
-                            st.pyplot(fig)
-                            # Save to memory and offer to download.
-                            fn = 'Scaling.png'
-                            buf = io.BytesIO()
-                            plt.savefig(buf, format='png', dpi=600)
-                            btn = st.download_button(
-                                label="Download image",
-                                data=buf,
-                                file_name=fn,
-                                mime="image/png"
-                                )
-                            buf.close()
+                        data_comp_chk = st.checkbox("t50 scaling with [P]")
+                        if data_comp_chk:
+                            # Different [P] values
+                            Nunique = (len(set(P)))
+                            st.write("Adjust thermodynamic parameters (if needed):")
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                ci = st.number_input("Solubility, $c_{"+(u"\u221e")+"}$", format="%2.2f", value = 0.,min_value = 0.)
+                               
+                            with col2:
+                                cc_mode = st.radio("Critical solubility, $c_c$", ('Unknown', 'Known'))
+                                if cc_mode == 'Unknown':
+                                    cc0 = 1 # initial guess
+                                else:
+                                    cc0 = st.number_input("Enter value", format="%2.2f", value = ci, min_value = ci, max_value = min(results.iloc[0])*.9999)
                             
-                            st.info('Fitting results')
-                            st.write(":green[Autocatalytic rate, $k_{"+(u"\u03b1")+"}/c_{"+(u"\u221e")+"} = $]", kac)
-                            st.write(":green[Dimensionless nucleation rate, $k_{"+(u"\u03b2")+"} = $]", kbeta)
-                            st.write(":green[Critical solubility, $c_c :$]", cc)
-                            st.write(':green[Goodness of fit, $r^2 :$]','%.5f' % r_squared)
-                        else:
-                            st.warning('Not possible: at least 4 different [P] values are required')
-           
-                    
-                        data_valid_chk = st.checkbox("Global fit")
-                        if data_valid_chk:
-                            Ncurves = df.shape[1]-1
-                            kac_g, kbeta_g, cc_g, k2f_g, r_squared_g, fig, flag = fit_data3(df, results, kac, kbeta, cc)
-                            if flag == 0:
+                            kac, kbeta, cc, r_squared, fig  = fit_data2(results)
+                            if Nunique > 3:    
                                 st.pyplot(fig)
                                 # Save to memory and offer to download.
-                                fn = 'Global-Fit.png'
+                                fn = 'Scaling.png'
                                 buf = io.BytesIO()
                                 plt.savefig(buf, format='png', dpi=600)
                                 btn = st.download_button(
@@ -568,78 +542,107 @@ def page_analyse():
                                     )
                                 buf.close()
                                 
-                                st.info('Global fitting results')
-                                st.write(":green[Autocatalytic rate, $k_{"+(u"\u03b1")+"}/c_{"+(u"\u221e")+"} = $]", kac_g)
-                                st.write(":green[Dimensionless nucleation rate, $k_{"+(u"\u03b2")+"} = $]", kbeta_g)
-                                if analysis_mode == 'Size-based':
-                                    st.write(":green[Dimensionless secondary nucleation rate, $k_2N_1/(k_{"+(u"\u03b1")+"}N_2) = $]", k2f_g)
-                                st.write(":green[Critical solubility, $c_c :$]", cc_g)
-                                st.write('Goodness of fit, $r^2 :$','%.5f' % r_squared_g)
-                                # Report
-                                st.info('Report')
-                                
-                                if flag == 0:
-                                    if r_squared_g > 0.9:
-                                        st.write('This report is based on the global fit results:')
-                                        if kbeta_g > 0.1:
-                                            st.write('- **Primary Nucleation**: the dimensionless value of $k_{'+(u"\u03b2")+'} = $','%.2E' % kbeta_g, \
-                                                     'is higher than 0.1 indicating fast primary nucleation rates compared with the autocatalytic processes of growth and secondary nucleation.')
-                                        elif kbeta_g < 0.01:
-                                            st.write('- **Primary Nucleation**: the dimensionless value of $k_{'+(u"\u03b2")+'} = $','%.2E' % kbeta_g, \
-                                                     'is below than 0.01 indicating primary nucleation is the rate-limiting step. Compared with primary nucleation, \
-                                                         the autocatalytic processes of growth and/or secondary nucleation are much faster.')
-                                        else:
-                                            st.write('- **Primary Nucleation**: the dimensionless value of $k_{'+(u"\u03b2")+'} = $','%.2E' % kbeta_g, \
-                                                     'is between 0.01 and 0.1 indicating primary nucleation is the rate-limiting step. Compared with primary nucleation, \
-                                                     the autocatalytic processes of growth and/or secondary nucleation are faster.')
-                                        st.write('- **Autocatalytic processes**: the value of $k_{'+(u'\u03b1')+'}$ has units of $[time]^{-1}$ and corresponds to the sum\
-                                                 of the rate constans for growth and sencondary nucleation: $k_{'+(u'\u03b1')+'} = k_{+} + k_2$.')
-                                                 
-                                        if analysis_mode == 'Size-based':
-                                            k2ka = k2f_g/223
-                                            k2ka_perc = k2ka*100
-                                            kgka_perc = 100 - k2ka_perc
-                                            st.write('- **Secondary Nucleation**: the dimensionless value of $k_2N_1/(k_{'+(u'\u03b1')+'}N_2) = $','%.2E' % k2f_g, \
-                                                 'corresponds to a $k_2/k_{'+(u'\u03b1')+'}$ ratio of','%.2E' % k2ka, 'if a $N_1/N_2 $', 'ratio of 223 [is assumed](https://doi.org/10.1002/ange.201707345). This\
-                                                     means that the percentage distribution (in mass) of autocatalytic processes is','%.4f' % k2ka_perc, '% secondary nucleation and','%.4f' % kgka_perc, '% growth.' )
-                                        else:
-                                            st.write('- **Secondary Nucleation**: Mass-based analysis alone provide no accurate information about secondary nucleation parameters. \
-                                                     For information about the relative importance of the autocatalytic processes of growth and secondary nucleation consider\
-                                                         [measuring size-based](https://doi.org/10.1002/ange.201707345) progress curves.')
-                                                         
-                                        
-                                        if r_squared_g < 0.95:
-                                            if r_squared > 0.95:
-                                                st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): The global fitting result is not great ($r^2 < $0.95). A possible cause is the occurrence of paralell patways of protein self-assembly.',\
-                                                         'Since the t50 scaling with [P] provided better fitting results ($r^2 > $0.95) the occurrence of colaescence or OPA is very likely.\
-                                                             Note: t50 vs. [P] scaling laws are [less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348).')
-                                            else:
-                                                st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): The global fitting result is not great ($r^2 < $0.95). A possible cause is the occurrence of paralell patways of protein self-assembly.',\
-                                                         'The t50 scaling with [P] [is less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348). In the present case, however, no additional insight was provided by the t50 scaling with [P].')
-                                        else:
-                                            if r_squared - r_squared_g < 0.02:
-                                                st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): Since the global fitting result is good ($r^2 > $0.95), the occurrence of very extensive coalescence and/or OPA is not likely.',\
-                                                     'Note: t50 scaling with [P] [is less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348) than the global fitting analysis.')
-                                            else:
-                                                st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): Since the global fitting result is good ($r^2 > $0.95), the occurrence of very extensive coalescence and/or OPA is not likely.',\
-                                                         'Since the t50 scaling with [P] is better than the global fit, the occurrenc of some coalescence and/or OPA is likely. Note: the t50 scaling with [P] [is less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348).')
-                                        
-                                        if cc == ci:
-                                            st.write('- **Surface Tension Effects** (STEs): Since $c_{'+(u'\u221e')+'} = c_c$, no STEs are present.')
-                                        else:
-                                            ste = 1 - (np.max(P) - cc) / (np.max(P) - ci)
-                                            st.write('- **Surface Tension Effects** (STEs): Based on the values of $c_{'+(u'\u221e')+'}$ and $c_c$, the relative importance of STEs is ','%.2f' % ste,' at the least (calculated using [P] = ', '%.1f' % np.max(P),\
-                                                     '). [The STEs scale](https://doi.org/10.1101/2022.11.23.517626) is between 0 (no STEs) and 1 (very strong STEs).') 
-                                        if Nunique < 4:
-                                            st.write('**Warning**: The fitted values are merely indicative. For better results, more progress curves are required measured using \
-                                                     different concentrations of protein.')
-                                        if r_squared_g < 0.95:
-                                            st.write('**Warning**: The global fitting is not great ($r^2 < $0.95). For better results, try to [improve data reproducibility](https://doi.org/10.3389/fnmol.2020.582488)')
-                                                     
-                                        st.write('Note: The occurence of [Off-Pathway Aggregation](https://doi.org/10.3390/biom8040108), [Surface Tension Effects](https://doi.org/10.1101/2022.11.23.517626) and coalescence can be checked using complementary analytical methods.')        
-                                            
-                                                 
-                                    else:
-                                        st.write('Not available. Check if the quality of the experimental results can be improved and if the model assumptions (found [here](https://doi.org/10.1074/jbc.M112.375345) and [here](https://doi.org/10.1002/anie.201707345)) apply to your system.')
+                                st.info('Fitting results')
+                                st.write(":green[Autocatalytic rate, $k_{"+(u"\u03b1")+"}/c_{"+(u"\u221e")+"} = $]", kac)
+                                st.write(":green[Dimensionless nucleation rate, $k_{"+(u"\u03b2")+"} = $]", kbeta)
+                                st.write(":green[Critical solubility, $c_c :$]", cc)
+                                st.write(':green[Goodness of fit, $r^2 :$]','%.5f' % r_squared)
+                            else:
+                                st.warning('Not possible: at least 4 different [P] values are required')
+               
                         
+                            data_valid_chk = st.checkbox("Global fit")
+                            if data_valid_chk:
+                                Ncurves = df.shape[1]-1
+                                kac_g, kbeta_g, cc_g, k2f_g, r_squared_g, fig, flag = fit_data3(df, results, kac, kbeta, cc)
+                                if flag == 0:
+                                    st.pyplot(fig)
+                                    # Save to memory and offer to download.
+                                    fn = 'Global-Fit.png'
+                                    buf = io.BytesIO()
+                                    plt.savefig(buf, format='png', dpi=600)
+                                    btn = st.download_button(
+                                        label="Download image",
+                                        data=buf,
+                                        file_name=fn,
+                                        mime="image/png"
+                                        )
+                                    buf.close()
+                                    
+                                    st.info('Global fitting results')
+                                    st.write(":green[Autocatalytic rate, $k_{"+(u"\u03b1")+"}/c_{"+(u"\u221e")+"} = $]", kac_g)
+                                    st.write(":green[Dimensionless nucleation rate, $k_{"+(u"\u03b2")+"} = $]", kbeta_g)
+                                    if analysis_mode == 'Size-based':
+                                        st.write(":green[Dimensionless secondary nucleation rate, $k_2N_1/(k_{"+(u"\u03b1")+"}N_2) = $]", k2f_g)
+                                    st.write(":green[Critical solubility, $c_c :$]", cc_g)
+                                    st.write('Goodness of fit, $r^2 :$','%.5f' % r_squared_g)
+                                    # Report
+                                    st.info('Report')
+                                    
+                                    if flag == 0:
+                                        if r_squared_g > 0.9:
+                                            st.write('This report is based on the global fit results:')
+                                            if kbeta_g > 0.1:
+                                                st.write('- **Primary Nucleation**: the dimensionless value of $k_{'+(u"\u03b2")+'} = $','%.2E' % kbeta_g, \
+                                                         'is higher than 0.1 indicating fast primary nucleation rates compared with the autocatalytic processes of growth and secondary nucleation.')
+                                            elif kbeta_g < 0.01:
+                                                st.write('- **Primary Nucleation**: the dimensionless value of $k_{'+(u"\u03b2")+'} = $','%.2E' % kbeta_g, \
+                                                         'is below than 0.01 indicating primary nucleation is the rate-limiting step. Compared with primary nucleation, \
+                                                             the autocatalytic processes of growth and/or secondary nucleation are much faster.')
+                                            else:
+                                                st.write('- **Primary Nucleation**: the dimensionless value of $k_{'+(u"\u03b2")+'} = $','%.2E' % kbeta_g, \
+                                                         'is between 0.01 and 0.1 indicating primary nucleation is the rate-limiting step. Compared with primary nucleation, \
+                                                         the autocatalytic processes of growth and/or secondary nucleation are faster.')
+                                            st.write('- **Autocatalytic processes**: the value of $k_{'+(u'\u03b1')+'}$ has units of $[time]^{-1}$ and corresponds to the sum\
+                                                     of the rate constans for growth and sencondary nucleation: $k_{'+(u'\u03b1')+'} = k_{+} + k_2$.')
+                                                     
+                                            if analysis_mode == 'Size-based':
+                                                k2ka = k2f_g/223
+                                                k2ka_perc = k2ka*100
+                                                kgka_perc = 100 - k2ka_perc
+                                                st.write('- **Secondary Nucleation**: the dimensionless value of $k_2N_1/(k_{'+(u'\u03b1')+'}N_2) = $','%.2E' % k2f_g, \
+                                                     'corresponds to a $k_2/k_{'+(u'\u03b1')+'}$ ratio of','%.2E' % k2ka, 'if a $N_1/N_2 $', 'ratio of 223 [is assumed](https://doi.org/10.1002/ange.201707345). This\
+                                                         means that the percentage distribution (in mass) of autocatalytic processes is','%.4f' % k2ka_perc, '% secondary nucleation and','%.4f' % kgka_perc, '% growth.' )
+                                            else:
+                                                st.write('- **Secondary Nucleation**: Mass-based analysis alone provide no accurate information about secondary nucleation parameters. \
+                                                         For information about the relative importance of the autocatalytic processes of growth and secondary nucleation consider\
+                                                             [measuring size-based](https://doi.org/10.1002/ange.201707345) progress curves.')
+                                                             
+                                            
+                                            if r_squared_g < 0.95:
+                                                if r_squared > 0.95:
+                                                    st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): The global fitting result is not great ($r^2 < $0.95). A possible cause is the occurrence of paralell patways of protein self-assembly.',\
+                                                             'Since the t50 scaling with [P] provided better fitting results ($r^2 > $0.95) the occurrence of colaescence or OPA is very likely.\
+                                                                 Note: t50 vs. [P] scaling laws are [less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348).')
+                                                else:
+                                                    st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): The global fitting result is not great ($r^2 < $0.95). A possible cause is the occurrence of paralell patways of protein self-assembly.',\
+                                                             'The t50 scaling with [P] [is less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348). In the present case, however, no additional insight was provided by the t50 scaling with [P].')
+                                            else:
+                                                if r_squared - r_squared_g < 0.02:
+                                                    st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): Since the global fitting result is good ($r^2 > $0.95), the occurrence of very extensive coalescence and/or OPA is not likely.',\
+                                                         'Note: t50 scaling with [P] [is less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348) than the global fitting analysis.')
+                                                else:
+                                                    st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): Since the global fitting result is good ($r^2 > $0.95), the occurrence of very extensive coalescence and/or OPA is not likely.',\
+                                                             'Since the t50 scaling with [P] is better than the global fit, the occurrenc of some coalescence and/or OPA is likely. Note: the t50 scaling with [P] [is less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348).')
+                                            
+                                            if cc == ci:
+                                                st.write('- **Surface Tension Effects** (STEs): Since $c_{'+(u'\u221e')+'} = c_c$, no STEs are present.')
+                                            else:
+                                                ste = 1 - (np.max(P) - cc) / (np.max(P) - ci)
+                                                st.write('- **Surface Tension Effects** (STEs): Based on the values of $c_{'+(u'\u221e')+'}$ and $c_c$, the relative importance of STEs is ','%.2f' % ste,' at the least (calculated using [P] = ', '%.1f' % np.max(P),\
+                                                         '). [The STEs scale](https://doi.org/10.1101/2022.11.23.517626) is between 0 (no STEs) and 1 (very strong STEs).') 
+                                            if Nunique < 4:
+                                                st.write('**Warning**: The fitted values are merely indicative. For better results, more progress curves are required measured using \
+                                                         different concentrations of protein.')
+                                            if r_squared_g < 0.95:
+                                                st.write('**Warning**: The global fitting is not great ($r^2 < $0.95). For better results, try to [improve data reproducibility](https://doi.org/10.3389/fnmol.2020.582488)')
+                                                         
+                                            st.write('Note: The occurence of [Off-Pathway Aggregation](https://doi.org/10.3390/biom8040108), [Surface Tension Effects](https://doi.org/10.1101/2022.11.23.517626) and coalescence can be checked using complementary analytical methods.')        
+                                                
+                                                     
+                                        else:
+                                            st.write('Not available. Check if the quality of the experimental results can be improved and if the model assumptions (found [here](https://doi.org/10.1074/jbc.M112.375345) and [here](https://doi.org/10.1002/anie.201707345)) apply to your system.')
+            else:
+                # terminate in case P is non numeric
+                errhand(0)
 # page_analyse()
