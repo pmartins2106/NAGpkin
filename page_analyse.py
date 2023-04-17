@@ -225,7 +225,8 @@ def page_analyse():
                 ig = np.asarray([1/tmax,.1,ymin,ymax]) if analysis_mode == 'Mass-based'\
                     else np.asarray([1/tmax,.1,(ymin+ymax)/2,.1])  
                 try:
-                    bds =  ([0, 0, ymin, 0], [np.inf, np.inf, np.inf,  np.inf])
+                    ymin_lim = min(ymin,0)
+                    bds =  ([0, 0, ymin_lim , 0], [np.inf, np.inf, np.inf,  np.inf])
                     parameters, covariance = curve_fit(first_fit, xdata, ydata, p0=ig,\
                                                    bounds=bds, xtol=1e-20*tmax, ftol=1e-20*ymax, maxfev=10000)
                     
