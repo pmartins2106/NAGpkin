@@ -61,14 +61,13 @@ def page_analyse():
             # allow duplicate column names (https://stackoverflow.com/questions/50083583/allow-duplicate-columns-in-pandas)
             df_load.columns = df_load.iloc[0]  # replace column with first row
             df_load = df_load.drop(0)  # remove the first row
-            
             # Remove empty columns
             df_load.dropna(how='all', axis=1, inplace=True)
             # number of curves
             Ncurves = df_load.shape[1]-1
             # Curve1, Curve2...
             colist = ['Curve'+str(i) for i in range(1, Ncurves+1)]
-            P = df_load.columns[1:].values
+            P = df_load.columns[1:].values.astype(np.float64)
             # reshape to disply
             Pdisp = P.reshape(1, -1)
             dfP = pd.DataFrame(Pdisp, columns=colist, index=['[P]'])
@@ -76,15 +75,17 @@ def page_analyse():
             st.write(dfP)
             df_load.columns =  np.concatenate((['Time'], colist), axis=0)
             st.dataframe(df_load)
+            flag_return = 0
         except:
             st.write('Error - check if the uploaded file is in the right format')
             df_load = 0
             Ncurves  = 0
             P = ''
             colist = 0
+            flag_return = 1
             
 
-        return df_load, Ncurves, P, colist
+        return df_load, Ncurves, P, colist, flag_return
     
     
     input = st.file_uploader('')
@@ -115,12 +116,12 @@ def page_analyse():
             # if run option is selected
         if st.session_state.run_example:
             input = "datasets//NAGpkin_example.ods"
-            df, Ncurves, P, colist = load_odf()
+            df, Ncurves, P, colist, flag_return = load_odf()
     except:
         # If the user imports file - parse it
        if input:
            with st.spinner('Loading data...'):
-                df, Ncurves, P, colist = load_odf()
+                df, Ncurves, P, colist, flag_return = load_odf()
                     
      
     # Error Handling
@@ -224,9 +225,10 @@ def page_analyse():
                 ig = np.asarray([1/tmax,.1,ymin,ymax]) if analysis_mode == 'Mass-based'\
                     else np.asarray([1/tmax,.1,(ymin+ymax)/2,.1])  
                 try:
-                    bds =  (0, np.inf)
+                    bds =  ([0, 0, ymin, 0], [np.inf, np.inf, np.inf,  np.inf])
                     parameters, covariance = curve_fit(first_fit, xdata, ydata, p0=ig,\
                                                    bounds=bds, xtol=1e-20*tmax, ftol=1e-20*ymax, maxfev=10000)
+                    
                     # Normalize data
                     cols = df.columns[curve + 1]
                     #definitions of half-life coordiantes
@@ -269,10 +271,11 @@ def page_analyse():
                     else:
                         results = pd.DataFrame(results_lst,
                                                     index = ['[P]','t50', 'R1', 'Rf'])
-            except ValueError:
+            except:
                 # flag to terminate run
                 flag_return = 1
                 results = 0
+
                 
         if flag_return > 0:
             # error message and terminate run
@@ -476,7 +479,7 @@ def page_analyse():
         return kac_g, kbeta_g, cc_g, k2f_g, r_squared_g, fig_scale, flag_return
    
     # Display results    
-    if input:
+    if input and flag_return == 0:
         # define color in plots
         # colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
         colormap = plt.cm.coolwarm 
