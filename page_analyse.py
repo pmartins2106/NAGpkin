@@ -139,7 +139,7 @@ def page_analyse():
             plt.style.use("dark_background")
         else:
             plt.style.use("default")
-        y_legend_m = 'Total mass of the new phase ([M])' if flag_legend == 1 else 'Normalized Mass: [M] / [M]f' 
+        y_legend_m = 'Mass-based progress curve' if flag_legend == 1 else 'Normalized Mass: [M] / [M]f' 
         y_legend_s = 'Mean size (R)' if flag_legend == 1 else 'Normalized Size: R/Rf'
         plt.scatter(p_x, p_y, color=colors[i], label=df.columns[i+1])
         plt.plot(p_xfit, p_yfit, color='g', linewidth=1)
