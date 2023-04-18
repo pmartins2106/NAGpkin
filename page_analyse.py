@@ -134,19 +134,20 @@ def page_analyse():
             
             
     #plot experimental and fitted data
-    def plot_fit(p_x, p_xfit, p_y, p_yfit, i):
+    def plot_fit(p_x, p_xfit, p_y, p_yfit, i, flag_legend):
         if plot_mode == 'Dark Mode':
             plt.style.use("dark_background")
         else:
             plt.style.use("default")
-            
+        y_legend_m = 'Total mass of the new phase ([M])' if flag_legend == 1 else 'Normalized Mass: [M] / [M]f' 
+        y_legend_s = 'Mean size (R)' if flag_legend == 1 else 'Normalized Size: R/Rf'
         plt.scatter(p_x, p_y, color=colors[i], label=df.columns[i+1])
         plt.plot(p_xfit, p_yfit, color='g', linewidth=1)
         plt.xlabel('Time')
         if analysis_mode == 'Mass-based':
-            plt.ylabel('Normalized Mass: [M] / [M]f')
+            plt.ylabel(y_legend_m)
         else:
-            plt.ylabel('Normalized Size: R/Rf')
+            plt.ylabel(y_legend_s)
                 
         
     def plot_scale(p_x, p_xfit, p_y, p_yfit):
@@ -255,7 +256,7 @@ def page_analyse():
                 # generate fitted curve
                 if flag_return == 0:
                     fit_y = first_fit(fit_x, parameters[0], parameters[1], parameters[2], parameters[3])
-                    plot_fit(xdata, fit_x, ydata, fit_y, curve)
+                    plot_fit(xdata, fit_x, ydata, fit_y, curve, 1)
                     
                     # array of results
                     if analysis_mode == 'Mass-based':
@@ -474,7 +475,7 @@ def page_analyse():
                 fit_y = sol[:,0]
             else:
                 fit_y = R1lst[curve] * (sol[:,0] / sol[:,1]) ** (1/3)
-            plot_fit(t_exp, fit_x, a_exp, fit_y, curve)
+            plot_fit(t_exp, fit_x, a_exp, fit_y, curve, 2)
         plt.legend()    
                 
         return kac_g, kbeta_g, cc_g, k2f_g, r_squared_g, fig_scale, flag_return
