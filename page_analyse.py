@@ -7,19 +7,26 @@ Created on Mon Feb 13 06:41:04 2023
 
 # Package imports
 import streamlit as st
+import streamlit_analytics
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import io
 from scipy.optimize import curve_fit
 from scipy.integrate import odeint
+from dotenv import load_dotenv
+import os
+load_dotenv()    
 
 
+
+streamlit_analytics.start_tracking()
 def page_analyse():
     """
     The analyse page is made with Streamlit for fitting nucleation-and-growth
     parameters to data uploaded by the User.
     """
+    
     # function to make expander-selection
     def make_expanders(expander_name, sidebar=True):
         """ Set up Figure Mode expander. """
@@ -656,3 +663,6 @@ def page_analyse():
                                         st.write('Not available. Check if the quality of the experimental results can be improved and if the model assumptions (found [here](https://doi.org/10.1074/jbc.M112.375345) and [here](https://doi.org/10.1002/anie.201707345)) apply to your system.')
     
 # page_analyse()
+
+my_password = os.getenv("Password")    
+streamlit_analytics.stop_tracking(unsafe_password=my_password)
