@@ -3,6 +3,7 @@ numpy==1.24.2
 pandas==1.5.3
 python-dotenv==1.0.0
 scipy==1.10.0
+beautifulsoup4==4.12.2
 streamlit==1.18.1
 streamlit_analytics==0.4.1
 odfpy
