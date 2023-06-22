@@ -6,16 +6,8 @@ Created on Mon Feb 13 06:41:39 2023
 """
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 def page_introduction():
-    
-    # Include Google Analytics tracking code
-    with open("GA4.html", "r") as f:
-        html_code = f.read()
-        components.html(html_code, height=0)
-
-    st.title("My Streamlit App")
     
     # Lower next markdowns
     st.sidebar.write("")
