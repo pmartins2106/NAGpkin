@@ -9,21 +9,31 @@ Thank you!
 
 # Streamlit
 import streamlit as st
-import streamlit_analytics
+# import streamlit_analytics
 # Add pages
 from page_introduction import page_introduction
 from page_analyse import page_analyse
 # from page_validate import page_validate
 from page_about import page_about
-from dotenv import load_dotenv
-import os
-load_dotenv()    
+# from dotenv import load_dotenv
+# import os
+# load_dotenv(".env")    
+import streamlit.components.v1 as components
 
-# analytics
-streamlit_analytics.start_tracking()
+# Include Google Analytics tracking code
+with open("GA4.html", "r") as f:
+    html_code = f.read()
+    components.html(html_code, height=0)
+
+st.title("My Streamlit App")
+
 
 # Set the default elements on the sidebar
-st.set_page_config(page_title='NAGpkin')
+# st.set_page_config(page_title='NAGpkin')
+
+# analytics
+# streamlit_analytics.start_tracking()
+
 
 st.sidebar.markdown("<h2 style='text-align: center;'>NAGpkin</h2>", 
             unsafe_allow_html=True)
@@ -60,5 +70,5 @@ def main_nag():
 if __name__ == "__main__":
     main_nag()
     
-my_password = os.getenv("Password")    
-streamlit_analytics.stop_tracking(unsafe_password=my_password)
+# my_password = os.getenv('Password')
+# streamlit_analytics.stop_tracking(my_password)
