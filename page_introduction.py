@@ -4,9 +4,45 @@ Created on Mon Feb 13 06:41:39 2023
 
 @author: pmartins
 """
+# Needed for google analytics
+from bs4 import BeautifulSoup
+import shutil
+import pathlib
+import logging
 
 import streamlit as st
 
+# google analytics
+def add_analytics_tag():
+    
+    analytics_js = """
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TVHC4G4TZB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-TVHC4G4TZB');
+    </script>
+    <div id="G-TVHC4G4TZB"></div>
+    """
+    analytics_id = "G-TVHC4G4TZB"
+
+    
+    # Identify html path of streamlit
+    index_path = pathlib.Path(st.__file__).parent / "static" / "index.html"
+    logging.info(f'editing {index_path}')
+    soup = BeautifulSoup(index_path.read_text(), features="html.parser")
+    if not soup.find(id=analytics_id): # if id not found within html file
+        bck_index = index_path.with_suffix('.bck')
+        if bck_index.exists():
+            shutil.copy(bck_index, index_path)  # backup recovery
+        else:
+            shutil.copy(index_path, bck_index)  # save backup
+        html = str(soup)
+        new_html = html.replace('<head>', '<head>\n' + analytics_js) 
+        index_path.write_text(new_html) # insert analytics tag at top of head
+        
 def page_introduction():
     
     # Lower next markdowns

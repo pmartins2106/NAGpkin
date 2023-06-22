@@ -45,7 +45,6 @@ def add_analytics_tag():
         new_html = html.replace('<head>', '<head>\n' + analytics_js) 
         index_path.write_text(new_html) # insert analytics tag at top of head
 
-
 # Add pages
 from page_introduction import page_introduction
 from page_analyse import page_analyse
