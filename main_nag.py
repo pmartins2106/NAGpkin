@@ -13,7 +13,6 @@ import pathlib
 import logging
 # Streamlit
 import streamlit as st
-import streamlit_analytics
 
 # google analytics
 def inject_ga():
@@ -22,13 +21,13 @@ def inject_ga():
 
     GA_JS = """
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TVHC4G4TZB"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-10ZHSZ60NN"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
     
-      gtag('config', 'G-TVHC4G4TZB');
+      gtag('config', 'G-10ZHSZ60NN');
     </script>>
     """
 
@@ -47,27 +46,25 @@ def inject_ga():
         index_path.write_text(new_html)
 inject_ga()
 
+#Theming
+CURRENT_THEME = "Dark"
+IS_DARK_THEME = True
+
 # Add pages
 from page_introduction import page_introduction
 from page_analyse import page_analyse
 # from page_validate import page_validate
 from page_about import page_about
-from dotenv import load_dotenv
-import os
-load_dotenv(".env")    
 
 
 # Set the default elements on the sidebar
-st.set_page_config(page_title='NAGpkin')
-
-# analytics
-streamlit_analytics.start_tracking()
+st.set_page_config(page_title='NAGPKin')
 
 
-st.sidebar.markdown("<h2 style='text-align: center;'>NAGpkin</h2>", 
+st.sidebar.markdown("<h2 style='text-align: center;'>NAGPKin</h2>", 
             unsafe_allow_html=True)
-st.sidebar.success('**N**ucleation-**An**d-**G**rowth **KIN**etics\
-                   during **P**rotein phase separation')
+st.sidebar.success('**N**ucleation-**A**nd-**G**rowth **P**arameters from the **Kin**etics\
+                   of protein phase separation')
 
 def main_nag():
     """
@@ -75,10 +72,7 @@ def main_nag():
         page_introduction - contains page with images and brief explanations
         page_analyse - contains various functions that allows user to upload
                     data as a .ods file and fit parameters.
-       page_validate - contains various functions that allows user to upload
-                   data as a .ods file and validate results from page_analyse.             
-       page_predict - contains various functions that allows user to predict
-       particle size distributions from fitted parameters.   
+       page_about - about               
     """
     pages = {
         "INTRODUCTION": page_introduction,
@@ -98,6 +92,3 @@ def main_nag():
   
 if __name__ == "__main__":
     main_nag()
-    
-my_password = os.getenv('Password')
-streamlit_analytics.stop_tracking(my_password)

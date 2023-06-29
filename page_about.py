@@ -14,7 +14,7 @@ def page_about():
     st.markdown("<h2 style='text-align: center;'>About</h2>", 
                 unsafe_allow_html=True)
     st.markdown('''
-    **NAGpkin** is a free-to-use web tool for characterizing the mechanisms of protein aggregation, crystallization or liquid-liquid phase separation.
+    **NAGPKin** is a free-to-use web tool for characterizing the mechanisms of protein aggregation, crystallization or liquid-liquid phase separation.
     Users can upload raw data of mass-increase or size-increase over time and then check what is the nucleation-and-growth mechanism that best describes their results.
     Poor numerical fits mean that other mechanims of protein self-assembly are at play or that the experimental data is of insufficient quality.\n
     ''')
