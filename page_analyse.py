@@ -39,11 +39,11 @@ def page_analyse():
     # analysis_mode = st.sidebar.radio('**What type of progress curves do you have?**', ('Mass-based', 'Size-based'))   
     # st.sidebar.markdown("#")
   
-    st.markdown("<h2 style='text-align: center;'> Analyse phase separation kinetics </h2>", 
+    st.markdown("<h2 style='text-align: center;'> Analysis of phase separation kinetics </h2>", 
                 unsafe_allow_html=True)
         
     st.info("""
-                - Upload size-based or mass-based progress curves
+                - Upload mass-based or size-based progress curves
                 - Find kinetic measurables
                 - Characterize the phase separation mechanismn
                 """)
@@ -140,16 +140,22 @@ def page_analyse():
             plt.style.use("dark_background")
         else:
             plt.style.use("default")
-        y_legend_m = 'Mass-based progress curve' if flag_legend == 1 else 'Normalized Mass: [M] / [M]f' 
-        y_legend_s = 'Mean size (R)' if flag_legend == 1 else 'Normalized Size: R/Rf'
-        plt.scatter(p_x, p_y, color=colors[i], label=df.columns[i+1])
+        y_legend_m = 'Mass-based progress curve(s)' if flag_legend == 1 else 'Normalized Mass: [M] / [M]inf' 
+        y_legend_s = 'Mean size (R)'
+        if i < 10:
+            plt.scatter(p_x, p_y, color=colors[i], label=df.columns[i+1])
+        elif i == 11:
+            plt.scatter(p_x, p_y, color=colors[i], label = '...')
+        else:
+            plt.scatter(p_x, p_y, color=colors[i])
+                
         plt.plot(p_xfit, p_yfit, color='g', linewidth=1)
         plt.xlabel('Time')
         if analysis_mode == 'Mass-based':
             plt.ylabel(y_legend_m)
         else:
             plt.ylabel(y_legend_s)
-                
+              
         
     def plot_scale(p_x, p_xfit, p_y, p_yfit):
         if plot_mode == 'Dark Mode':
@@ -181,8 +187,13 @@ def page_analyse():
         A = kb/(1-kb)**2 * (1 - kk2 * R1**3)
         B = kb/(1-kb) * (1 - kk2/kb * R1**3)
         return A, B
-        
-
+    
+    def size_func(x, ka, kb, R1, kk2):
+        alphat = 1-1 / (kb * (np.exp(ka*x) - 1) + 1)
+        A, B = AB_size(kb, kk2, R1)
+        y = A * (np.log(1-alphat) + ka*x)/alphat - B
+        return y
+    
     # Progress curves assuming STEs=0
     def first_fit(x, param0, param1, param2, param3):
         ka = param0
@@ -194,9 +205,7 @@ def page_analyse():
         else:
             R1 = param2
             kk2 = param3
-            alphat = 1-1 / (kb * (np.exp(ka*x) - 1) + 1)
-            A, B = AB_size(kb, kk2, R1)
-            y1 = A * (np.log(1-alphat) + ka*x)/alphat - B
+            y1 = x.apply(lambda xx: 1 if xx == 0 else size_func(xx, ka, kb, R1, kk2))
             y = R1 * (1/y1)**(1/3)
         return y
 
@@ -209,6 +218,7 @@ def page_analyse():
         fig_fit = plt.figure(facecolor=backc)
         
         results_lst = {}
+        results_curve = np.array([], dtype=np.int64).reshape(200,0)
         R1lst = np.zeros(Ncurves)
         flag_return = 0
         for curve in range(Ncurves):
@@ -224,14 +234,16 @@ def page_analyse():
                 ymin = np.min(ydata)
                 ymax = np.max(ydata)
                 # initial guesses of ka, kb, (Fmin and Fmax) or (R1 and kk2)
-                ig = np.asarray([1/tmax,.1,ymin,ymax]) if analysis_mode == 'Mass-based'\
-                    else np.asarray([1/tmax,.1,(ymin+ymax)/2,.1])  
+                ig = np.asarray([1/tmax,1e-2,ymin,ymax]) if analysis_mode == 'Mass-based'\
+                    else np.asarray([1/tmax,.01,ymin,0])
+                    
                 try:
                     ymin_lim = min(ymin,0)
-                    bds =  ([0, 0, ymin_lim , 0], [np.inf, np.inf, np.inf,  np.inf])
+                    bds =  ([0, 0, ymin_lim , 0], [np.inf, 100, np.inf,  np.inf])
                     parameters, covariance = curve_fit(first_fit, xdata, ydata, p0=ig,\
                                                    bounds=bds, xtol=1e-20*tmax, ftol=1e-20*ymax, maxfev=10000)
-                    
+                    kac0 = parameters[0]
+                    kbeta0 = parameters[1]
                     # Normalize data
                     cols = df.columns[curve + 1]
                     #definitions of half-life coordiantes
@@ -253,39 +265,42 @@ def page_analyse():
                         R1lst[curve] = baseline
                 except RuntimeError:
                        flag_return = flag_return + 1  
-            
+                
                 # generate fitted curve
                 if flag_return == 0:
+                    fit_x = pd.Series(fit_x) # need a pd series to feed first_fit function
                     fit_y = first_fit(fit_x, parameters[0], parameters[1], parameters[2], parameters[3])
                     plot_fit(xdata, fit_x, ydata, fit_y, curve, 1)
-                    
+             
                     # array of results
                     if analysis_mode == 'Mass-based':
                         results_lst[curve] = [P[curve], t50, v50, amplitude]
                     else:
                         results_lst[curve] = [P[curve], t50, baseline, amplitude]
-                        
+                    
                     plt.legend()
+                    
                     # Parse resuls
-            
                     if analysis_mode == 'Mass-based':
                         results = pd.DataFrame(results_lst,
-                                                index = ['[P]','t50', 'v50', '[M]f'])
+                                                index = ['[P]','t50', 'v50', '[M]inf'])
                     else:
                         results = pd.DataFrame(results_lst,
-                                                    index = ['[P]','t50', 'R1', 'Rf'])
+                                                    index = ['[P]','t50', 'R1', 'Rinf'])
             except:
                 # flag to terminate run
                 flag_return = 1
                 results = 0
-
+                
+            fit_xy = np.stack((fit_x.T, fit_y.T), axis = 1)
+            results_curve = np.concatenate((results_curve, fit_xy), axis=1)
                 
         if flag_return > 0:
             # error message and terminate run
              errhand(0)  
             
         # R1 values are used during size-based global fit
-        return results, R1lst, fig_fit, flag_return
+        return results, results_curve, kac0, kbeta0, R1lst, fig_fit, flag_return
     
     
     # Progress curves assuming STES
@@ -365,9 +380,10 @@ def page_analyse():
         # generate time variable to be used in the fitted curves 
         fit_x = np.linspace(min(xdata),max(xdata),100)
         fit_y = second_fit(fit_x, kac, kbeta, cc)
+        fit_xy = np.stack((fit_x.T, fit_y.T), axis = 1)
         plot_scale(xdata, fit_x, ydata, fit_y)
         plt.legend()
-        return kac, kbeta, cc, r_squared, fig_scale
+        return kac, kbeta, cc, r_squared, fit_xy, fig_scale
     
     
     # Progress curves assuming STES
@@ -397,13 +413,13 @@ def page_analyse():
             if analysis_mode == 'Mass-based':
                 YSOL = np.concatenate((YSOL, sol[:,0]), axis=0)
             else:
-                # zeroing the analystica solution for size(t)
-                size_an = [0 for element in range(len(sol))]
+                # zeroing the numerical solution for size(t)
+                size_num = [0 for element in range(len(sol))]
                 #initial condition
-                size_an[0] = R1lst[curve]
+                size_num[0] = R1lst[curve]
                 #size = R1 * (beta(t)) ** (1/3)
-                size_an[1:len(sol)] = R1lst[curve] * (sol[1:,0] / sol[1:,1]) ** (1/3)
-                YSOL = np.concatenate((YSOL, size_an), axis=0)
+                size_num[1:len(sol)] = R1lst[curve] * (sol[1:,0] / sol[1:,1]) ** (1/3)
+                YSOL = np.concatenate((YSOL, size_num), axis=0)
         return YSOL
         
     
@@ -416,25 +432,48 @@ def page_analyse():
         YDATA = []
         PDATA = np.zeros(Ncurves)
         NDATA = np.zeros(Ncurves, dtype=int)
+        results_global = np.array([], dtype=np.int64).reshape(200,0)
         for curve in range(Ncurves):
            # select each curve
            dfi = df.iloc[:, [0,curve+1]].astype(float)
            t_exp , a_exp = extract_curves(dfi)
-           # size of each progress curve
-           NDATA[curve] = len(t_exp)
            # concatenated progress curve adding intial condition (0,0)
-           XDATA = np.concatenate((XDATA, [0], t_exp), axis=0)
-           YDATA = np.concatenate((YDATA, [0], a_exp), axis=0)
+           if 0 in t_exp.values:
+                 XDATA = np.concatenate((XDATA, t_exp), axis=0)
+                 # size of each progress curve
+                 NDATA[curve] = len(t_exp)-1
+           else:
+                 XDATA = np.concatenate((XDATA, [0], t_exp), axis=0)
+                 NDATA[curve] = len(t_exp)
+           # XDATA = np.concatenate((XDATA, [0], t_exp), axis=0)
+           
            PDATA[curve] = P[curve]
-                 
+           
+           if analysis_mode == 'Mass-based':
+                if 0 in t_exp.values:
+                    YDATA = np.concatenate((YDATA, a_exp), axis=0)
+                else:
+                    YDATA = np.concatenate((YDATA, [0], a_exp), axis=0)
+                # YDATA = np.concatenate((YDATA, [0], a_exp), axis=0)
+           else:
+                if 0 in t_exp.values:
+                    YDATA = np.concatenate((YDATA, a_exp), axis=0)
+                else:
+                    YDATA = np.concatenate((YDATA, [R1lst[curve]], a_exp), axis=0)
+                # YDATA = np.concatenate((YDATA, [R1lst[curve]], a_exp), axis=0)
+           
+               
+       
         # curve fitting
         if cc_mode == 'Unknown':
             # initial guesses of ka kb cc k2f
-            ig = np.array([kac, kbeta, cc0, 0.1])
-            bds =  ([0, 0, 0, 0], [np.inf, np.inf, np.min(PDATA), np.inf])
+            ig = np.array([min(kac0,.9), min(kbeta0,.9), cc0, 1])
+            bds =  ([0, 0, ci, 0], [np.inf, 10, np.min(PDATA), np.inf])
             fun = lambda XDATA, a, b, c, d: third_fit(XDATA, a, b, c, d, PDATA, NDATA)
+           
             try:
                 parameters, covariance = curve_fit(fun, XDATA, YDATA, p0=ig, bounds = bds, maxfev=10000)
+                
             except RuntimeError:
                 # error message and proceed using ig for parameters
                 errhand(1)
@@ -442,8 +481,8 @@ def page_analyse():
                 flag_return = -1
         else:
             # initial guesses of ka kb k2f
-            ig = np.array([kac, kbeta, 0.1])
-            bds = (0, np.inf)
+            ig = np.array([min(kac0,.9), min(kbeta0,.9), 1])
+            bds =  ([0, 0, 0], [np.inf, 10, np.inf])
             fun = lambda XDATA, a, b, d: third_fit(XDATA, a, b, cc0, d, PDATA, NDATA)
             try:
                 parameters, covariance = curve_fit(fun, XDATA, YDATA, p0=ig, bounds = bds, maxfev=10000)
@@ -461,7 +500,8 @@ def page_analyse():
         # Goodness of fit:  https://stackoverflow.com/questions/19189362/getting-the-r-squared-value-using-curve-fit
         y_teo = third_fit(XDATA, kac_g, kbeta_g, cc_g, k2f_g, PDATA, NDATA)
         r_squared_g = goodness(y_teo, YDATA)
-        # xdata = []
+        Rmin = min(y_teo) #rough estimate of R2 for reporting analysis
+        
         y0 = [0, 0]
         for curve in range(Ncurves):
             # select each curve
@@ -477,9 +517,13 @@ def page_analyse():
             else:
                 fit_y = R1lst[curve] * (sol[:,0] / sol[:,1]) ** (1/3)
             plot_fit(t_exp, fit_x, a_exp, fit_y, curve, 2)
+            
+            fit_xy = np.stack((fit_x.T, fit_y.T), axis = 1)
+            results_global = np.concatenate((results_global, fit_xy), axis=1)
+        
         plt.legend()    
                 
-        return kac_g, kbeta_g, cc_g, k2f_g, r_squared_g, fig_scale, flag_return
+        return kac_g, kbeta_g, cc_g, k2f_g, Rmin, r_squared_g, results_global, fig_scale, flag_return
    
     # Display results    
     if input and flag_return == 0:
@@ -497,31 +541,43 @@ def page_analyse():
         data_fit_chk = st.checkbox("Estimate kinetic measurables")
         if data_fit_chk:
             with st.spinner("Fitting... Please wait a moment."):
-                results, R1lst, fig, flag = fit_data(df)
+                results, results_curve, kac0, kbeta0, R1lst, fig, flag = fit_data(df)
                 if flag == 0:
                     st.pyplot(fig)
-                    # Save to memory and offer to download.
-                    fn = 'Half-Life.png'
-                    buf = io.BytesIO()
-                    plt.savefig(buf, format='png', dpi=600)
-                    btn = st.download_button(
-                        label="Download image",
-                        data=buf,
-                        file_name=fn,
-                        mime="image/png"
-                        )
-                    buf.close()
+                    
+                    # # Save to memory and offer to download.
+                    # fn = 'Half-Life.png'
+                    # buf = io.BytesIO()
+                    # plt.savefig(buf, format='png', dpi=600)
+                    # btn = st.download_button(
+                    #     label="Download image",
+                    #     data=buf,
+                    #     file_name=fn,
+                    #     mime="image/png"
+                    #     )
+                    # buf.close()
         
                     st.info('Half-life coordinates and curve limits')
                     results.columns = colist
                     st.dataframe(results)
                     csvdf1 = pd.DataFrame(results).to_csv().encode('utf-8')
                     st.download_button(
-                       "Download Data",
-                       csvdf1,
-                       "Measurables.csv",
-                       "text/csv",
-                       key='download-csv')                    
+                        "Fitted parameters",
+                        csvdf1,
+                        "Measurables.csv",
+                        "text/csv",
+                        key='download-csv') 
+                    
+                    pd.set_option('display.max_rows', None) #to avoid truncation
+                    results_curve = pd.DataFrame(results_curve, columns =["Curve "+str(round(i - (i+i%2)/2 + i%2 )) for i in range(1, (Ncurves)*2+1)])
+                    # st.dataframe(fit_x)
+                    csvdf1 = pd.DataFrame(results_curve).to_csv().encode('utf-8')
+                    st.download_button(
+                        "Fitted Curves",
+                        csvdf1,
+                        "Curves.csv",
+                        "text/csv",
+                        key='download2-csv') 
     
                     
                     data_comp_chk = st.checkbox("t50 scaling with [P]")
@@ -536,24 +592,35 @@ def page_analyse():
                         with col2:
                             cc_mode = st.radio("Critical solubility, $c_c$", ('Unknown', 'Known'))
                             if cc_mode == 'Unknown':
-                                cc0 = 1 # initial guess
+                                cc0 = ci + .1 # initial guess
                             else:
                                 cc0 = st.number_input("Enter value", format="%2.2f", value = ci, min_value = ci, max_value = min(results.iloc[0])*.9999)
                         
-                        kac, kbeta, cc, r_squared, fig  = fit_data2(results)
+                        kac, kbeta, cc, r_squared, fit_xy, fig  = fit_data2(results)
                         if Nunique > 3:    
                             st.pyplot(fig)
-                            # Save to memory and offer to download.
-                            fn = 'Scaling.png'
-                            buf = io.BytesIO()
-                            plt.savefig(buf, format='png', dpi=600)
-                            btn = st.download_button(
-                                label="Download image",
-                                data=buf,
-                                file_name=fn,
-                                mime="image/png"
-                                )
-                            buf.close()
+                            
+                            # # Save to memory and offer to download.
+                            # fn = 'Scaling.png'
+                            # buf = io.BytesIO()
+                            # plt.savefig(buf, format='png', dpi=600)
+                            # btn = st.download_button(
+                            #     label="Download image",
+                            #     data=buf,
+                            #     file_name=fn,
+                            #     mime="image/png"
+                            #     )
+                            # buf.close()
+                            
+                            pd.set_option('display.max_rows', None) #to avoid truncation
+                            results_scaling = pd.DataFrame(fit_xy, columns =['[P]', 't50'])
+                            csvdf1 = pd.DataFrame(results_scaling).to_csv().encode('utf-8')
+                            st.download_button(
+                                "Fitted Curve",
+                                csvdf1,
+                                "Scaling.csv",
+                                "text/csv",
+                                key='download3-csv')
                             
                             st.info('Fitting results')
                             st.write(":green[Autocatalytic rate, $k_{"+(u"\u03b1")+"}/c_{"+(u"\u221e")+"} = $]", kac)
@@ -567,20 +634,40 @@ def page_analyse():
                         data_valid_chk = st.checkbox("Global fit")
                         if data_valid_chk:
                             Ncurves = df.shape[1]-1
-                            kac_g, kbeta_g, cc_g, k2f_g, r_squared_g, fig, flag = fit_data3(df, results, kac, kbeta, cc)
+                            kac_g, kbeta_g, cc_g, k2f_g, Rmin, r_squared_g, results_global, fig, flag = fit_data3(df, results, kac, kbeta, cc)
                             if flag == 0:
                                 st.pyplot(fig)
-                                # Save to memory and offer to download.
-                                fn = 'Global-Fit.png'
-                                buf = io.BytesIO()
-                                plt.savefig(buf, format='png', dpi=600)
-                                btn = st.download_button(
-                                    label="Download image",
-                                    data=buf,
-                                    file_name=fn,
-                                    mime="image/png"
-                                    )
-                                buf.close()
+                                
+                                # # Save to memory and offer to download.
+                                # fn = 'Global-Fit.png'
+                                # buf = io.BytesIO()
+                                # plt.savefig(buf, format='png', dpi=600)
+                                # btn = st.download_button(
+                                #     label="Download image",
+                                #     data=buf,
+                                #     file_name=fn,
+                                #     mime="image/png"
+                                #     )
+                                # buf.close()
+                                
+                                pd.set_option('display.max_rows', None) #to avoid truncation                               
+                                csvdf1 = pd.DataFrame(df).to_csv().encode('utf-8')
+                                st.download_button(
+                                    "Normalized Data",
+                                    csvdf1,
+                                    "Normalized.csv",
+                                    "text/csv",
+                                    key='download4-csv')
+                                
+                                pd.set_option('display.max_rows', None) #to avoid truncation
+                                results_global = pd.DataFrame(results_global, columns =["Curve "+str(round(i - (i+i%2)/2 + i%2 )) for i in range(1, (Ncurves)*2+1)])
+                                csvdf1 = pd.DataFrame(results_global).to_csv().encode('utf-8')
+                                st.download_button(
+                                    "Fitted Curves",
+                                    csvdf1,
+                                    "GlobalFit.csv",
+                                    "text/csv",
+                                    key='download5-csv')
                                 
                                 st.info('Global fitting results')
                                 st.write(":green[Autocatalytic rate, $k_{"+(u"\u03b1")+"}/c_{"+(u"\u221e")+"} = $]", kac_g)
@@ -591,7 +678,6 @@ def page_analyse():
                                 st.write('Goodness of fit, $r^2 :$','%.5f' % r_squared_g)
                                 # Report
                                 st.info('Report')
-                                
                                 if flag == 0:
                                     if r_squared_g > 0.9:
                                         st.write('This report is based on the global fit results:')
@@ -610,11 +696,13 @@ def page_analyse():
                                                  of the rate constans for growth and sencondary nucleation: $k_{'+(u'\u03b1')+'} = k_{+} + k_2$.')
                                                  
                                         if analysis_mode == 'Size-based':
-                                            k2ka = k2f_g/223
+                                            N1N2lst = (R1lst/Rmin)**3
+                                            N1N2 = min(N1N2lst) if min(N1N2lst > 1) else 223
+                                            k2ka = k2f_g/N1N2                                            
                                             k2ka_perc = k2ka*100
                                             kgka_perc = 100 - k2ka_perc
                                             st.write('- **Secondary Nucleation**: the dimensionless value of $k_2N_1/(k_{'+(u'\u03b1')+'}N_2) = $','%.2E' % k2f_g, \
-                                                 'corresponds to a $k_2/k_{'+(u'\u03b1')+'}$ ratio of','%.2E' % k2ka, 'if a $N_1/N_2 $', 'ratio of 223 [is assumed](https://doi.org/10.1002/ange.201707345). This\
+                                                 'corresponds to a $k_2/k_{'+(u'\u03b1')+'}$ ratio of','%.2E' % k2ka, 'if a $N_1/N_2 $', 'ratio of', '%.0f' %N1N2, '[is assumed](https://doi.org/10.1002/ange.201707345). This\
                                                      means that the percentage distribution (in mass) of autocatalytic processes is','%.4f' % k2ka_perc, '% secondary nucleation and','%.4f' % kgka_perc, '% growth.' )
                                         else:
                                             st.write('- **Secondary Nucleation**: Mass-based analysis alone provide no accurate information about secondary nucleation parameters. \
@@ -624,24 +712,24 @@ def page_analyse():
                                         
                                         if r_squared_g < 0.95:
                                             if r_squared > 0.95:
-                                                st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): The global fitting result is not great ($r^2 < $0.95). A possible cause is the occurrence of paralell patways of protein self-assembly.',\
-                                                         'Since the t50 scaling with [P] provided better fitting results ($r^2 > $0.95) the occurrence of colaescence or OPA is very likely.\
-                                                             Note: t50 vs. [P] scaling laws are [less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348).')
+                                                st.write('- **Parallel processes**: The global fitting result is not great ($r^2 < $0.95). A possible cause is the occurrence of paralell processes such as coalescence and off-pathway aggregation (OPA).',\
+                                                         'Since the t50 scaling with [P] provided better fitting results ($r^2 > $0.95) the occurrence of some parallel process is very likely.\
+                                                             Note: t50 vs. [P] scaling laws are [less sensitive to OPA](https://doi.org/10.1074/jbc.M115.699348) than the global fit analysis.')
                                             else:
-                                                st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): The global fitting result is not great ($r^2 < $0.95). A possible cause is the occurrence of paralell patways of protein self-assembly.',\
-                                                         'The t50 scaling with [P] [is less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348). In the present case, however, no additional insight was provided by the t50 scaling with [P].')
+                                                st.write('- **Parallel processes**: The global fitting result is not great ($r^2 < $0.95). A possible cause is the occurrence of paralell processes such as coalescence and off-pathway aggregation (OPA).',\
+                                                         'The t50 scaling with [P] [is less sensitive to OPA](https://doi.org/10.1074/jbc.M115.699348) than the global fit analysis. In the present case, however, no additional insight was provided by the t50 scaling with [P].')
                                         else:
-                                            if r_squared - r_squared_g < 0.02:
-                                                st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): Since the global fitting result is good ($r^2 > $0.95), the occurrence of very extensive coalescence and/or OPA is not likely.',\
-                                                     'Note: t50 scaling with [P] [is less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348) than the global fitting analysis.')
+                                            if r_squared - r_squared_g < 0.03:
+                                                st.write('- **Parallel processes**: Since the global fitting result is good ($r^2 > $0.95), the occurrence of very extensive parallel processes such as coalescence and off-pathway aggregation (OPA) is not likely.',\
+                                                     'Note: t50 scaling with [P] [is less sensitive to OPA](https://doi.org/10.1074/jbc.M115.699348) than the global fit analysis.')
                                             else:
-                                                st.write('- **Coalescence** and/or **off-pathway aggregation** (OPA): Since the global fitting result is good ($r^2 > $0.95), the occurrence of very extensive coalescence and/or OPA is not likely.',\
-                                                         'Since the t50 scaling with [P] is better than the global fit, the occurrenc of some coalescence and/or OPA is likely. Note: the t50 scaling with [P] [is less sensitive to coalescence and OPA](https://doi.org/10.1074/jbc.M115.699348).')
+                                                st.write('- **Parallel processes**: Since the global fitting result is good ($r^2 > $0.95), the occurrence of very extensive parallel processes such as coalescence and off-pathway aggregation (OPA) is not likely.',\
+                                                         'Since the t50 scaling with [P] is better than the global fit, the occurrenc of some parallel process is likely. Note: the t50 scaling with [P] [is less sensitive to OPA](https://doi.org/10.1074/jbc.M115.699348) than the global fit analysis')
                                         
                                         if cc == ci:
                                             st.write('- **Surface Tension Effects** (STEs): Since $c_{'+(u'\u221e')+'} = c_c$, no STEs are present.')
                                         else:
-                                            ste = 1 - (np.max(P) - cc) / (np.max(P) - ci)
+                                            ste = 1 - (np.max(P) - cc_g) / (np.max(P) - ci)
                                             st.write('- **Surface Tension Effects** (STEs): Based on the values of $c_{'+(u'\u221e')+'}$ and $c_c$, the relative importance of STEs is ','%.2f' % ste,' at the least (calculated using [P] = ', '%.1f' % np.max(P),\
                                                      '). [The STEs scale](https://doi.org/10.1101/2022.11.23.517626) is between 0 (no STEs) and 1 (very strong STEs).') 
                                         if Nunique < 4:

@@ -42,7 +42,7 @@ def page_introduction():
         ''')
     with st.expander("What information is provided?"):
         st.write('''
-            **NAGPKin** quantifies the relative importance of the kinetic steps of primary nucleation, secondary nucleation and growth. Information about the possible occurrence of [Off-Pathway Aggregation](https://doi.org/10.3390/biom8040108), [Surface Tension Effects](https://doi.org/10.1101/2022.11.23.517626) and coalescence is also provided.
+            **NAGPKin** quantifies the relative importance of the kinetic steps of primary nucleation, secondary nucleation and growth. Information about the possible occurrence of [Off-Pathway Aggregation](https://doi.org/10.3390/biom8040108), [Surface Tension Effects](https://doi.org/10.1101/2022.11.23.517626) and other parallel processes is also provided.
         ''')
     with st.expander("How good are NAGPKin predictions?"):
         st.write('''
