@@ -318,14 +318,9 @@ def page_analyse():
             tau = 2 / (kaD * np.sqrt(1 - 4*kb*ac*(1-ac)))
             t1 = tau * np.arctanh(kaD*tau/2*(1-2*kb*ac)) 
             tc = t1 + tau * np.arctanh(kaD*tau/2*(2*ac-1))
-            # st.write(tau, t1, tc)
-            if analysis_mode == 'Mass-based':
-                t50_dic[i] = np.piecewise(t1, [t1 < tc, t1 >= tc],
-                                 [lambda z: t1-1/2*tau * np.log((np.tanh(t1/tau) + 1 - 0.5*(1-kb))\
-                                                               /(-np.tanh(t1/tau) + 1 + 0.5*(1-kb))), lambda z: tc - np.log(ac/(1-ac)) ])
-            else:
-                # assuming 2ry nucleation rates = 0
-                t50_dic[i] = t1
+            t50_dic[i] = np.piecewise(t1, [t1 < tc, t1 >= tc],
+                         [lambda z: t1-1/2*tau * np.log((np.tanh(t1/tau) + 1 - 0.5*(1-kb))\
+                                              /(-np.tanh(t1/tau) + 1 + 0.5*(1-kb))), lambda z: tc - np.log(ac/(1-ac)) / kaD ])
         t50 = t50_dic.reshape(-1)
         return t50
     
@@ -701,9 +696,14 @@ def page_analyse():
                                             k2ka = k2f_g/N1N2                                            
                                             k2ka_perc = k2ka*100
                                             kgka_perc = 100 - k2ka_perc
-                                            st.write('- **Secondary Nucleation**: the dimensionless value of $k_2N_1/(k_{'+(u'\u03b1')+'}N_2) = $','%.2E' % k2f_g, \
-                                                 'corresponds to a $k_2/k_{'+(u'\u03b1')+'}$ ratio of','%.2E' % k2ka, 'if a $N_1/N_2 $', 'ratio of', '%.0f' %N1N2, '[is assumed](https://doi.org/10.1002/ange.201707345). This\
-                                                     means that the percentage distribution (in mass) of autocatalytic processes is','%.4f' % k2ka_perc, '% secondary nucleation and','%.4f' % kgka_perc, '% growth.' )
+                                            if N1N2 == 223:
+                                                st.write('- **Secondary Nucleation**: the dimensionless value of $k_2N_1/(k_{'+(u'\u03b1')+'}N_2) = $','%.2E' % k2f_g, \
+                                                     'corresponds to a $k_2/k_{'+(u'\u03b1')+'}$ ratio of','%.2E' % k2ka, 'if a $N_1/N_2 $', 'ratio of', '%.0f' %N1N2, '[is assumed](https://doi.org/10.1002/ange.201707345). This\
+                                                         means that the percentage distribution (in mass) of autocatalytic processes is','%.4f' % k2ka_perc, '% secondary nucleation and','%.4f' % kgka_perc, '% growth.' )
+                                            else:
+                                                st.write('- **Secondary Nucleation**: the dimensionless value of $k_2N_1/(k_{'+(u'\u03b1')+'}N_2) = $','%.2E' % k2f_g, \
+                                                     'corresponds to a $k_2/k_{'+(u'\u03b1')+'}$ ratio of','%.2E' % k2ka, 'if a $N_1/N_2 $', 'ratio of', '%.0f' %N1N2, 'is assumed. This\
+                                                         means that the percentage distribution (in mass) of autocatalytic processes is','%.4f' % k2ka_perc, '% secondary nucleation and','%.4f' % kgka_perc, '% growth.' )
                                         else:
                                             st.write('- **Secondary Nucleation**: Mass-based analysis alone provide no accurate information about secondary nucleation parameters. \
                                                      For information about the relative importance of the autocatalytic processes of growth and secondary nucleation consider\
