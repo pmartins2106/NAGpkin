@@ -25,7 +25,7 @@ def page_introduction():
                 unsafe_allow_html=True)
     
     st.markdown('''
-    **NAGPKin** characterizes the mechanisms of protein phase separation. Protein phase separation is relevant in both health and disease in phenomena such as the liquid-liquid phase separation of functional droplets, or the self-assembly of proteins into solid aggregates called amyloids.
+    **NAGPKin** characterizes the mechanisms of protein phase separation as described [in this paper](https://doi.org/10.1091/mbc.E23-07-0289). Protein phase separation is relevant in both health and disease in phenomena such as the liquid-liquid phase separation of functional droplets, or the self-assembly of proteins into solid aggregates called amyloids.
     ''')
     
     with st.expander("What do I *need*?"):
