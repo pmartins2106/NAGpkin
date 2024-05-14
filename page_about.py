@@ -51,7 +51,7 @@ def page_about():
     
     st.markdown("<h2 style='text-align: center;'>Funding</h2>", 
                 unsafe_allow_html=True)
-    st.image("images//logos.png", use_column_width=True)
+    st.image("images/logos.png", use_column_width=True)
     
     st.markdown('''
                 This work is supported by funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement [No 952334](https://phasage.eu/). This research was funded by the Portuguese Foundation for Science and Technology (FCT) in the framework of project PTDC/QUICOL/2444/2021.
