@@ -1,0 +1,5 @@
+Command_for_requirements:
+pipreqs C:\Users\pmartins\.spyder-py3\Projects\NAGpkin\test
+Note: the .py file has to be pasted within the test directory
+
+Add manually "odfpy" e.g in the last line of requirements 

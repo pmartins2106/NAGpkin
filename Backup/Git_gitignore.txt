@@ -1,0 +1,19 @@
+# Only once?
+# https://docs.github.com/en/get-started/getting-started-with-git/about-remote-repositories
+$ git remote add origin https://github.com/pmartins2106/NAGpkin.git
+
+$ touch .gitignore
+$ nano .gitignore
+# to check
+$ git status
+$ git add .gitignore
+
+$ git commit
+# remove comments and save
+
+$ git push origin main
+
+#https://www.neonscience.org/resources/learning-hub/tutorials/git-setup-remote
+
+
+
