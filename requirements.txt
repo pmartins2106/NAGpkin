@@ -7,3 +7,4 @@ beautifulsoup4==4.12.2
 streamlit==1.18.1
 streamlit_analytics==0.4.1
 odfpy
+altair<5
