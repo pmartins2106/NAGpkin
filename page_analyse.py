@@ -197,7 +197,7 @@ def page_analyse():
     # Progress curves assuming STEs=0
     def first_fit(x, param0, param1, param2, param3):
         ka = param0
-        kb = param1
+        kb = 10**param1
         if analysis_mode == 'Mass-based':
             F0 = param2
             Fmax = param3
@@ -234,28 +234,28 @@ def page_analyse():
                 ymin = np.min(ydata)
                 ymax = np.max(ydata)
                 # initial guesses of ka, kb, (Fmin and Fmax) or (R1 and kk2)
-                ig = np.asarray([1/tmax,1e-2,ymin,ymax]) if analysis_mode == 'Mass-based'\
+                ig = np.asarray([1/tmax,-2,ymin,ymax]) if analysis_mode == 'Mass-based'\
                     else np.asarray([1/tmax,.01,ymin,0])
                     
                 try:
                     ymin_lim = min(ymin,0)
-                    bds =  ([0, 0, ymin_lim , 0], [np.inf, 100, np.inf,  np.inf])
+                    bds =  ([0, -60, ymin_lim , 0], [np.inf, 2, np.inf,  np.inf])
                     parameters, covariance = curve_fit(first_fit, xdata, ydata, p0=ig,\
                                                    bounds=bds, xtol=1e-20*tmax, ftol=1e-20*ymax, maxfev=10000)
                     kac0 = parameters[0]
-                    kbeta0 = parameters[1]
+                    kbeta0 = 10**parameters[1]
                     # Normalize data
                     cols = df.columns[curve + 1]
                     #definitions of half-life coordiantes
-                    v50 = 1/4 * (parameters[1] + 1) * parameters[0]
-                    t50 = np.log(1 + 1/parameters[1]) / parameters[0]
+                    v50 = 1/4 * (kbeta0 + 1) * parameters[0]
+                    t50 = np.log(1 + 1/kbeta0) / parameters[0]
                     if analysis_mode == 'Mass-based':
                         # alpha-normalization (between 0 and 1)
                         df[cols] = (df[cols] - parameters[2]) / (parameters[3] - parameters[2])
                         amplitude = parameters[3] - parameters[2]
                         baseline = parameters[2]
                     else:
-                        kb = parameters[1]
+                        kb = 10**parameters[1]
                         kk2 = parameters[3]
                         R1 = parameters[2]
                         A, B = AB_size(kb, kk2, R1)
